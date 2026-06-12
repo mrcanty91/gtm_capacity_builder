@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Renegade Ops — GTM Capacity Model</title>
+<link rel="icon" href="assets/renegadeops_favicon_32.png">
+<link rel="stylesheet" href="css/colors_and_type.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div>
+      <img class="logo" src="assets/renegadeops_extended_inverted.svg" alt="Renegade Ops">
+      <div class="brand-sub">GTM Capacity Model</div>
+    </div>
+    <div class="nav-tabs" id="navTabs">
+      <button class="nav-tab active" data-page="dashboard">Dashboard</button>
+      <button class="nav-tab" data-page="rates">1 · Team Setup</button>
+      <button class="nav-tab" data-page="drivers">2 · Model Drivers</button>
+      <button class="nav-tab" data-page="builder">3 · Plan Builder</button>
+      <button class="nav-tab" data-page="readiness">4 · Readiness</button>
+      <button class="nav-tab" data-page="ledger">Ledger</button>
+      <button class="nav-tab" data-page="board">Board Review</button>
+      <button class="nav-tab" data-page="agents">Agents</button>
+    </div>
+    <div class="nav-actions">
+      <select id="scenarioSel" title="Active scenario" style="width:auto"></select>
+      <button class="btn btn-ghost" id="btnUndo" title="Undo last change (Ctrl/Cmd+Z)" disabled>Undo</button>
+      <button class="btn btn-ghost" id="btnVersions" title="Save & open named runs">Versions</button>
+      <button class="btn btn-ghost" id="btnExport" title="Export model as JSON">Export</button>
+      <button class="btn btn-ghost" id="btnImport" title="Import model JSON">Import</button>
+      <input type="file" id="fileImport" accept=".json" class="hidden">
+    </div>
+  </nav>
+
+  <!-- DASHBOARD -->
+  <main class="page active" id="page-dashboard" style="position:relative">
+    <div class="stencil-bg" id="stencilNum">01</div>
+    <div class="page-head">
+      <div class="section-marker">EXEC VIEW</div>
+      <h1 id="dashTitle">The Plan</h1>
+      <p id="dashSub"></p>
+    </div>
+    <div id="sampleBanner"></div>
+    <div class="grid cols-5" id="kpiRow"></div>
+    <div class="row mt-3">
+      <span class="mono-label">OUTPUTS — FUEL THE NEXT STEP:</span>
+      <button class="btn btn-ghost" id="btnExpHiring" title="Req-level hiring plan with open-by dates — for recruiting/ATS">⤓ Hiring plan (CSV)</button>
+      <button class="btn btn-ghost" id="btnExpBudget" title="Monthly cost by team & category + revenue — for FP&A">⤓ Budget (CSV)</button>
+      <button class="btn btn-ghost" id="btnExpBoard" title="Print-ready summary: bridge, investment, readiness, governance">⤓ Board pack (HTML)</button>
+      <span style="flex:1"></span>
+      <button class="btn btn-ghost" id="btnStartBlank" title="Empty model: your countries, roles and teams from scratch">○ Start blank</button>
+      <button class="btn btn-ghost" id="btnDashReset" title="Restore the demo workbook model">↺ Reset demo data</button>
+    </div>
+    <hr class="divider-heavy">
+    <div class="grid cols-2">
+      <div class="chart-card" id="chCost"></div>
+      <div class="chart-card" id="chRev"></div>
+      <div class="chart-card" id="chHeads"></div>
+      <div class="chart-card" id="chCac"></div>
+    </div>
+    <div class="mt-4" id="scenCompare"></div>
+    <div class="mt-4" id="actualsSection"></div>
+    <input type="file" id="tplFile" accept=".csv,text/csv" style="display:none">
+    <input type="file" id="actualsFile" accept=".csv" class="hidden">
+    <div class="mt-4" id="dashChecks"></div>
+  </main>
+
+  <!-- RATES & FX (step 1) -->
+  <main class="page" id="page-rates">
+    <div class="page-head">
+      <div class="section-marker">STEP 1 / TEAM SETUP</div>
+      <h1>Team Setup</h1>
+      <p><b>Who you hire and what they cost.</b> Build your teams and their roles, set pay bands per country, and lock the FX budget rates. Every cost in the model prices off this page — get it right once, then move to Model Drivers.</p>
+    </div>
+    <div id="fxSection"></div>
+    <hr class="divider-thin">
+    <div id="rateSection"></div>
+    <hr class="divider-thin">
+    <div class="row"><span class="muted small">Teams and pay look right?</span><button class="btn btn-primary" id="btnGoBuilder">Continue to Model Drivers →</button></div>
+  </main>
+
+  <!-- MODEL DRIVERS (step 2) -->
+  <main class="page" id="page-drivers">
+    <div class="page-head">
+      <div class="section-marker">STEP 2 / MODEL DRIVERS</div>
+      <h1>Set the Dials</h1>
+      <p>Every company-level decision in one place: the timeline, the revenue you start with, the goals you're committing to, where revenue comes from, and the economics of hiring. Set the dials, agree them, then let the model build the first pass.</p>
+      <p class="muted small">The small <span class="ledger-chip">+</span> chip beside a number puts it on the <b>Ledger</b> — owner, challenge, <span class="ledger-chip agreed">AGREED</span>. Team-level operating assumptions (productivity, conversions, spans) live with each team in the Builder.</p>
+    </div>
+    <div class="card mb-3" id="configCard"></div>
+    <div class="card mb-3 featured" id="channelCard"></div>
+    <div class="card mb-3" id="buildCta"></div>
+  </main>
+
+  <!-- PLAN BUILDER (step 3) -->
+  <main class="page" id="page-builder">
+    <div class="page-head">
+      <div class="section-marker">STEP 3 / PLAN BUILDER</div>
+      <h1>Build the Machine</h1>
+      <p>One team at a time: the roles it hires, the monthly hiring plan, and a live sanity check. The drivers are set — this is where the org takes shape.</p>
+    </div>
+    <div class="card mb-3" id="driverStrip"></div>
+    <div class="builder-layout">
+      <aside class="team-rail" id="teamRail"></aside>
+      <section class="team-detail" id="teamDetail"></section>
+    </div>
+  </main>
+
+  <!-- READINESS -->
+  <main class="page" id="page-readiness">
+    <div class="page-head">
+      <div class="section-marker">STEP 4 / HARD CHECKS</div>
+      <h1>Role Readiness</h1>
+      <p>Hire at the right time, not the hopeful time. Guardrails flag months where hiring runs ahead of what revenue supports, roles that don't pay back, capacity gaps, and attrition you forgot to backfill.</p>
+    </div>
+    <div class="card mb-3" id="guardrailCard"></div>
+    <div class="grid cols-2 mb-3">
+      <div class="chart-card" id="chArrHead"></div>
+      <div class="chart-card" id="chCostPct"></div>
+    </div>
+    <div class="card mb-3" id="sensCard"></div>
+    <div id="selfFundingSection"></div>
+    <div class="mt-3" id="healthStrip"></div>
+    <hr class="divider-thin">
+    <h3 class="mb-2">All checks</h3>
+    <div id="checksList"></div>
+  </main>
+
+  <!-- LEDGER -->
+  <main class="page" id="page-ledger">
+    <div class="page-head">
+      <div class="section-marker">ASSUMPTION LEDGER</div>
+      <h1>Defend Every Number</h1>
+      <p>Nothing goes to the CFO as "we think". Every material number gets an owner and a paper trail; work the list until it's all AGREED, then export the brief.</p>
+    </div>
+    <div class="field-notice info mb-3">
+      <div class="fn-head">// HOW IT WORKS</div>
+      <div class="fn-detail">
+        <b>1.</b> In Team Setup, Model Drivers or the Plan Builder, click the <span class="ledger-chip">+</span> chip beside any number to track it here.&nbsp;
+        <b>2.</b> Set the <b>owner once</b> — it acts as a tag (e.g. "VP Sales") that groups this page.&nbsp;
+        <b>3.</b> The group debates in the comment trail; status moves PROPOSED → CHALLENGED → AGREED. Board Review agents can push challenges here automatically.&nbsp;
+        <b>4.</b> When everything material reads AGREED, export the defendability brief for the CFO pack.
+      </div>
+    </div>
+    <div class="row mb-3">
+      <label class="field" style="width:200px"><span class="lbl mono-label">Your name (for comments)</span><input type="text" id="userName" placeholder="e.g. Alex"></label>
+      <label class="field" style="width:170px"><span class="lbl mono-label">Filter status</span>
+        <select id="ledgerFilter"><option value="">All</option><option>PROPOSED</option><option>CHALLENGED</option><option>AGREED</option></select>
+      </label>
+      <label class="field" style="width:170px"><span class="lbl mono-label">Filter owner</span>
+        <select id="ledgerOwnerFilter"><option value="">All</option></select>
+      </label>
+      <span style="flex:1"></span>
+      <button class="btn btn-secondary" id="btnBrief">Export defendability brief</button>
+    </div>
+    <div class="grid cols-4 mb-3" id="ledgerStats"></div>
+    <div id="ledgerList"></div>
+  </main>
+
+  <!-- BOARD REVIEW -->
+  <main class="page" id="page-board">
+    <div class="page-head">
+      <div class="section-marker">BOARD REVIEW</div>
+      <h1>Face the Skeptics</h1>
+      <p>Four operators interrogate the live model the way a real exec team would — assumptions challenged, timing questioned, attrition checked. Push any challenge straight into the ledger for the owning team to answer.</p>
+    </div>
+    <div class="field-notice info" id="apiNotice">
+      <div class="fn-head">// SETUP</div>
+      <div class="fn-title">LLM provider &amp; API key required</div>
+      <div class="fn-detail">Pick a provider and add a key in the <b>Agents</b> tab — Anthropic, OpenAI, OpenRouter, a local Ollama, or any OpenAI-compatible endpoint. Keys stay in this browser; calls go directly from your machine to the provider. Per-agent models, budget limits and prompts are configured there too.</div>
+    </div>
+    <div class="grid cols-4" id="agentGrid"></div>
+    <hr class="divider-hazard">
+    <div class="row">
+      <button class="btn btn-stencil" id="btnRunBoard">Run Board Review</button>
+      <span class="muted small" id="boardStatus"></span>
+    </div>
+    <div class="mt-3" id="boardSynthesis"></div>
+  </main>
+
+  <!-- AGENTS CONFIG PAGE -->
+  <main class="page" id="page-agents">
+    <div class="page-head">
+      <div class="section-marker">AGENT CONFIG</div>
+      <h1>The Hired Help</h1>
+      <p>Every AI agent in the tool is configured here: which model it runs, how much it may say, and the exact instructions it works from. Daily limits protect you from accidental spend — calls stop when a cap is hit.</p>
+    </div>
+    <div class="card mb-3" id="agentGlobalCard"></div>
+    <div id="agentCfgList"></div>
+  </main>
+
+  <!-- FULLSCREEN HIRING GRID MODAL -->
+  <div class="modal-back" id="gridModal">
+    <div class="modal grid-modal" id="gridModalBody"></div>
+  </div>
+
+  <!-- TEAM CONFIGURATOR MODAL -->
+  <div class="modal-back" id="teamCfgModal">
+    <div class="modal" id="teamCfgBody" style="max-width:860px"></div>
+  </div>
+
+  <!-- ADD TEAM MODAL -->
+  <div class="modal-back" id="addTeamModal">
+    <div class="modal">
+      <h3>Add a team</h3>
+      <p class="muted small">Pick the shape that matches how the team makes its number. You'll name it and add its roles next.</p>
+      <div id="archetypeList" class="mt-2"></div>
+      <div class="row mt-2"><button class="btn btn-ghost" id="btnCloseAddTeam">Cancel</button></div>
+    </div>
+  </div>
+
+  <!-- LEDGER ENTRY MODAL -->
+  <div class="modal-back" id="ledgerModal">
+    <div class="modal" id="ledgerModalBody"></div>
+  </div>
+
+  <!-- VERSIONS MODAL -->
+  <div class="modal-back" id="versionsModal">
+    <div class="modal" id="versionsBody" style="max-width:720px"></div>
+  </div>
+
+  <!-- GENERIC ASK MODAL (replaces native prompt/confirm) -->
+  <div class="modal-back" id="askModal" style="z-index:55">
+    <div class="modal" id="askBody" style="max-width:480px"></div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script src="js/engine.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/agents.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "gtm-capacity-builder",
+  "version": "1.0.0",
+  "description": "Zero-build, browser-based GTM capacity & cost planning with an AI review board. Bring your own LLM.",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "node tests/run_all.js",
+    "verify": "node tests/verify.js"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}
