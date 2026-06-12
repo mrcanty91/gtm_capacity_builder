@@ -9,6 +9,6 @@
     "verify": "node tests/verify.js"
   },
   "devDependencies": {
-    "jsdom": "^24.0.0"
+    "jsdom": "^29.0.0"
   }
 }
