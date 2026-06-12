@@ -17,6 +17,18 @@
 
 Running a board persona or research agent sends the full model brief (assumptions, comp rates, results, ledger) to your chosen LLM provider. If that's not acceptable for your data, use a local provider (Ollama) or don't enable agents — the entire planning tool works without them.
 
+## Custom LLM endpoints
+
+The Agents tab lets you point the app at any OpenAI-compatible base URL. Understand what that means: **the app will send your API key (as a Bearer token) and your full model brief to whatever URL is configured.** Only use endpoints you control or trust; never paste a base URL from a tutorial or message you haven't verified. The same applies to per-agent prompt edits sourced from strangers — prompts shape what the model is asked to do with your data.
+
+## Spreadsheet exports
+
+CSV exports neutralize formula injection (cells beginning with `=`, `+`, `@`, or a non-numeric `-` get an apostrophe prefix), because names inside shared run/model files are attacker-controllable. Still treat spreadsheets from untrusted run files with normal caution.
+
+## External requests the app makes
+
+Exactly two kinds: Google Fonts (CSS + font files at page load — discloses your IP to Google; the app works offline on system fonts if blocked) and the LLM provider you configure (only when you run an agent). Nothing else, ever.
+
 ## Reporting
 
 Found a vulnerability? Open a GitHub issue (or a private security advisory if sensitive).

@@ -1863,7 +1863,17 @@
   }
 
   // -------- bulk templates: download a CSV prefilled with your data, edit in Excel, re-import --------
-  function csvEsc(v) { v = v == null ? '' : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+  function csvEsc(v) {
+    const isNum = typeof v === 'number';
+    v = v == null ? '' : String(v);
+    // CSV formula-injection guard (CWE-1236): a cell starting with = + @ or tab/CR — or a
+    // non-numeric cell starting with "-" — would execute as a formula when the CSV opens in
+    // a spreadsheet. Shared run/model files make names attacker-controllable, so neutralize
+    // with a leading apostrophe. Real numbers pass through untouched.
+    if (!isNum && /^[=+@\t\r]/.test(v)) v = "'" + v;
+    else if (!isNum && v[0] === '-' && !/^-(\d|\.)/.test(v)) v = "'" + v;
+    return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  }
   function parseCSVRows(text) {
     const rows = []; let row = [], cur = '', q = false;
     for (let i = 0; i < text.length; i++) {
