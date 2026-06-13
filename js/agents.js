@@ -11,8 +11,29 @@
   // Two protocols cover the field: Anthropic's native Messages API, and the OpenAI-compatible
   // chat-completions shape spoken by OpenAI, OpenRouter, Ollama, Groq, Mistral, Together, etc.
   const PROVIDERS = [
-    { id: 'anthropic', label: 'Anthropic (Claude)', protocol: 'anthropic', baseUrl: 'https://api.anthropic.com', webSearch: true, keyHint: 'sk-ant-…', defaultModel: 'claude-sonnet-4-6', suggestions: ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001', 'claude-opus-4-8'] },
-    { id: 'openai', label: 'OpenAI', protocol: 'openai', baseUrl: 'https://api.openai.com/v1', webSearch: false, keyHint: 'sk-…', defaultModel: 'gpt-4o', suggestions: ['gpt-4o', 'gpt-4o-mini'] },
+    // providers with a curated catalog get `models` (rendered as a dropdown with a
+    // Custom… escape hatch); open catalogs keep free-text + suggestions
+    {
+      id: 'anthropic', label: 'Anthropic (Claude)', protocol: 'anthropic', baseUrl: 'https://api.anthropic.com', webSearch: true, keyHint: 'sk-ant-…', defaultModel: 'claude-sonnet-4-6',
+      models: [
+        { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 — recommended' },
+        { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 — fast · cheapest' },
+        { id: 'claude-opus-4-8', label: 'Claude Opus 4.8 — deepest · expensive' },
+        { id: 'claude-fable-5', label: 'Claude Fable 5 — frontier · heavy token burn', warn: true }
+      ],
+      suggestions: ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001', 'claude-opus-4-8', 'claude-fable-5']
+    },
+    {
+      id: 'openai', label: 'OpenAI', protocol: 'openai', baseUrl: 'https://api.openai.com/v1', webSearch: false, keyHint: 'sk-…', defaultModel: 'gpt-4o',
+      models: [
+        { id: 'gpt-4o', label: 'GPT-4o — recommended' },
+        { id: 'gpt-4o-mini', label: 'GPT-4o mini — fast · cheapest' },
+        { id: 'gpt-4.1', label: 'GPT-4.1' },
+        { id: 'gpt-4.1-mini', label: 'GPT-4.1 mini' },
+        { id: 'o3', label: 'o3 — reasoning' }
+      ],
+      suggestions: ['gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'gpt-4.1-mini', 'o3']
+    },
     { id: 'openrouter', label: 'OpenRouter (any model)', protocol: 'openai', baseUrl: 'https://openrouter.ai/api/v1', webSearch: false, keyHint: 'sk-or-…', defaultModel: '', suggestions: ['anthropic/claude-sonnet-4.6', 'openai/gpt-4o', 'meta-llama/llama-3.3-70b-instruct'] },
     { id: 'ollama', label: 'Ollama (local · free)', protocol: 'openai', baseUrl: 'http://localhost:11434/v1', webSearch: false, keyOptional: true, keyHint: 'not required', defaultModel: '', suggestions: ['llama3.3', 'qwen2.5'] },
     { id: 'custom', label: 'Custom (any OpenAI-compatible)', protocol: 'openai', baseUrl: '', webSearch: false, keyHint: 'your key', defaultModel: '', suggestions: [] }

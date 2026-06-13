@@ -93,17 +93,41 @@ const A = () => w.eval('Agents');
   await nav('agents');
   expect('ui: provider select present with 5 options', !!$('#agProvider') && $$('#agProvider option').length === 5);
   expect('ui: base URL prefilled for anthropic', $('#agBaseUrl').value.includes('anthropic.com'));
+
+  // curated provider (Anthropic): real dropdowns with the full catalog + Custom escape hatch
+  const gSel = $('[data-seldefmodel="g"]');
+  expect('ui: anthropic default model is a dropdown', !!gSel && gSel.tagName === 'SELECT');
+  const gOpts = Array.from(gSel.options).map(o => o.value);
+  expect('ui: dropdown lists ALL Claude models (sonnet, haiku, opus, fable)',
+    ['claude-sonnet-4-6', 'claude-haiku-4-5-20251001', 'claude-opus-4-8', 'claude-fable-5'].every(m => gOpts.includes(m)));
+  expect('ui: dropdown has a Custom escape hatch', gOpts.includes('__custom__'));
+  const agSel = $$('#agentCfgList select[data-selagmodel]');
+  expect('ui: every agent gets a model dropdown on anthropic', agSel.length === Ag.AGENT_DEFS.length);
+  expect('ui: per-agent dropdown includes provider-default blank + all models',
+    Array.from(agSel[0].options).map(o => o.value).filter(v => v.startsWith('claude-')).length === 4 && agSel[0].options[0].value === '');
+  // pick Opus for the CFO via the dropdown
+  change(agSel.find(x => x.getAttribute('data-selagmodel') === 'cfo'), 'claude-opus-4-8'); await flush(300);
+  expect('ui: dropdown choice persists per agent', (JSON.parse(w.localStorage.getItem('ro_capacity_settings')).agents.cfo || {}).model === 'claude-opus-4-8');
+  // custom hatch reveals a text input
+  const agSel2 = $$('#agentCfgList select[data-selagmodel]').find(x => x.getAttribute('data-selagmodel') === 'coo');
+  change(agSel2, '__custom__'); await flush(200);
+  const cooInp = $('#agentCfgList input[data-agmodel="coo"]');
+  expect('ui: Custom… reveals a free-text field', !!cooInp && cooInp.style.display !== 'none');
+  change(cooInp, 'claude-experimental-x'); await flush(300);
+  expect('ui: custom model id persists', (JSON.parse(w.localStorage.getItem('ro_capacity_settings')).agents.coo || {}).model === 'claude-experimental-x');
+
   change('#agProvider', 'openrouter'); await flush(300);
   expect('ui: switching provider re-prefills base URL', $('#agBaseUrl').value.includes('openrouter.ai'));
   expect('ui: no-web-search notice shows for non-anthropic provider', /NO LIVE WEB SEARCH/.test($('#agentGlobalCard').textContent));
   expect('ui: model suggestions datalist populated', $$('#agModelSugg option').length > 0);
+  expect('ui: open-catalog provider keeps free-text default model', !!$('input[data-defmodel="g"]') && !$('[data-seldefmodel="g"]'));
   // save full provider config
-  change('#agDefModel', 'anthropic/claude-sonnet-4.6'); change('#agApiKey', 'sk-or-test');
+  change($('input[data-defmodel="g"]'), 'anthropic/claude-sonnet-4.6'); change('#agApiKey', 'sk-or-test');
   click('#agSave'); await flush(300);
   const saved = JSON.parse(w.localStorage.getItem('ro_capacity_settings'));
   expect('ui: provider config persists (id, key, model)', saved.provider.id === 'openrouter' && saved.provider.apiKey === 'sk-or-test' && saved.provider.defaultModel === 'anthropic/claude-sonnet-4.6');
-  // per-agent model is now a free-text input
-  expect('ui: per-agent model is free text with placeholder', $$('#agentCfgList input[data-agmodel]').length === Ag.AGENT_DEFS.length);
+  // per-agent model is free text on open-catalog providers
+  expect('ui: per-agent model is free text on openrouter', $$('#agentCfgList input[data-agmodel]').length === Ag.AGENT_DEFS.length && $$('#agentCfgList select[data-selagmodel]').length === 0);
   // back to anthropic: notice gone
   change('#agProvider', 'anthropic'); await flush(300);
   expect('ui: anthropic restores web-search capability (no notice)', !/NO LIVE WEB SEARCH/.test($('#agentGlobalCard').textContent));

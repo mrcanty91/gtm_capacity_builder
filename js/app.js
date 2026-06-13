@@ -288,6 +288,35 @@
       ${matches ? '<span class="badge ok">YOUR CAPS COVER THIS</span>' : `<button class="btn btn-ghost" id="btnApplyRecLimits">Apply ${rec.calls} / $${rec.usd}</button>`}</div></div>`;
   }
 
+  // model picker: curated providers (Anthropic, OpenAI) get a real dropdown with a
+  // Custom… escape hatch; open catalogs (OpenRouter, Ollama, custom) stay free-text.
+  function modelPickerHTML(prov, attr, current, blankLabel) {
+    const curated = prov.models && prov.models.length;
+    if (!curated) {
+      const ph = blankLabel || ('e.g. ' + (prov.suggestions[0] || 'model-id'));
+      return `<input type="text" ${attr} value="${esc(current)}" placeholder="${esc(ph)}" list="agModelSugg">`;
+    }
+    const inList = !current || prov.models.some(m => m.id === current);
+    const custom = current && !inList;
+    return `<select ${attr.replace('data-', 'data-sel')}>
+        ${blankLabel ? `<option value="" ${!current ? 'selected' : ''}>${esc(blankLabel)}</option>` : ''}
+        ${prov.models.map(m => `<option value="${esc(m.id)}" ${m.id === current ? 'selected' : ''}>${esc(m.label)}</option>`).join('')}
+        <option value="__custom__" ${custom ? 'selected' : ''}>Custom — type a model ID…</option>
+      </select>
+      <input type="text" ${attr} value="${custom ? esc(current) : ''}" placeholder="model-id" style="${custom ? '' : 'display:none;'}margin-top:.35rem">`;
+  }
+  function bindModelPicker(scope, selAttr, inpAttr, onValue) {
+    scope.querySelectorAll(`[${selAttr}]`).forEach(sel => sel.addEventListener('change', () => {
+      const inp = scope.querySelector(`[${inpAttr}="${sel.getAttribute(selAttr)}"]`) || scope.querySelector(`[${inpAttr}]`);
+      if (sel.value === '__custom__') { if (inp) { inp.style.display = ''; inp.focus(); } return; }
+      if (inp) inp.style.display = 'none';
+      onValue(sel.getAttribute(selAttr), sel.value);
+    }));
+    scope.querySelectorAll(`[${inpAttr}]`).forEach(inp => inp.addEventListener('change', () => {
+      onValue(inp.getAttribute(inpAttr), inp.value.trim());
+    }));
+  }
+
   function renderAgents() {
     const s = settings();
     const lim = Agents.limits(s);
@@ -302,7 +331,7 @@
         <label class="field" style="grid-column: span 2"><span class="lbl mono-label"><span class="lbl-txt">Base URL</span></span>
           <input type="text" id="agBaseUrl" value="${esc(prov.baseUrl)}" placeholder="https://…"></label>
         <label class="field"><span class="lbl mono-label"><span class="lbl-txt">Default model</span></span>
-          <input type="text" id="agDefModel" value="${esc(((s.provider || {}).defaultModel) || prov.defaultModel || '')}" placeholder="e.g. ${esc(prov.suggestions[0] || 'model-id')}" list="agModelSugg"></label>
+          ${modelPickerHTML(prov, 'data-defmodel="g"', ((s.provider || {}).defaultModel) || prov.defaultModel || '', '')}</label>
         <label class="field" style="grid-column: span 2"><span class="lbl mono-label"><span class="lbl-txt">API key (stored in this browser only)</span></span>
           <input type="password" id="agApiKey" value="${esc(prov.apiKey || '')}" placeholder="${esc(prov.keyHint)}"></label>
         <label class="field"><span class="lbl mono-label"><span class="lbl-txt">Max agent calls / day</span></span>
@@ -330,6 +359,7 @@
       st.limits = Object.assign({}, Agents.limits(st), { maxCallsPerDay: rec.calls, maxUSDPerDay: rec.usd });
       saveSettings(st); toast('Recommended limits applied'); renderAgents();
     };
+    bindModelPicker(g, 'data-seldefmodel', 'data-defmodel', () => { /* committed on Save */ });
     $('#agProvider').onchange = () => {
       const st = settings();
       const pid = $('#agProvider').value;
@@ -339,11 +369,13 @@
     };
     $('#agSave').onclick = () => {
       const st = settings();
+      const dmSel = $('[data-seldefmodel="g"]'), dmInp = $('[data-defmodel="g"]');
+      const dm = dmSel ? (dmSel.value === '__custom__' ? (dmInp ? dmInp.value.trim() : '') : dmSel.value) : (dmInp ? dmInp.value.trim() : '');
       st.provider = {
         id: $('#agProvider').value,
         baseUrl: $('#agBaseUrl').value.trim(),
         apiKey: $('#agApiKey').value.trim(),
-        defaultModel: $('#agDefModel').value.trim()
+        defaultModel: dm
       };
       st.apiKey = st.provider.id === 'anthropic' ? st.provider.apiKey : st.apiKey; // legacy field
       st.limits = {
@@ -372,7 +404,7 @@
         <p class="muted small" style="margin:.25rem 0 .75rem">${esc(def.mandate)}</p>
         <div class="assumption-grid">
           <label class="field"><span class="lbl mono-label"><span class="lbl-txt">Model (blank = provider default)</span></span>
-            <input type="text" data-agmodel="${def.id}" value="${esc(cfg.model)}" placeholder="${esc(Agents.providerCfg(s).id === 'anthropic' ? cfg.anthropicDefault : (Agents.providerCfg(s).defaultModel || 'provider default'))}" list="agModelSugg"></label>
+            ${modelPickerHTML(Agents.providerCfg(s), `data-agmodel="${def.id}"`, cfg.model, `Provider default — ${esc(Agents.providerCfg(s).id === 'anthropic' ? cfg.anthropicDefault : (Agents.providerCfg(s).defaultModel || 'set on this page'))}`)}</label>
           <label class="field"><span class="lbl mono-label"><span class="lbl-txt">Max output tokens</span></span>
             <input type="number" min="256" step="256" data-agtok="${def.id}" value="${cfg.maxTokens}"></label>
         </div>
@@ -390,9 +422,9 @@
     const upd = (id, patch) => { const st = settings(); st.agents = st.agents || {}; st.agents[id] = Object.assign({}, st.agents[id], patch); saveSettings(st); };
     list.querySelectorAll('[data-agshow]').forEach(el => el.onclick = () => { agentPromptOpen[el.dataset.agshow] = !agentPromptOpen[el.dataset.agshow]; renderAgents(); });
     list.querySelectorAll('[data-agen]').forEach(el => el.onchange = () => upd(el.dataset.agen, { enabled: el.checked }));
-    list.querySelectorAll('[data-agmodel]').forEach(el => el.onchange = () => {
-      upd(el.dataset.agmodel, { model: el.value.trim() });
-      toast(/fable/i.test(el.value) ? '⚠ Fable selected — heavy token burn, check your daily caps' : 'Model updated');
+    bindModelPicker(list, 'data-selagmodel', 'data-agmodel', (id, val) => {
+      upd(id, { model: val });
+      toast(/fable/i.test(val) ? '⚠ Fable selected — heavy token burn, check your daily caps' : 'Model updated');
       renderAgents();
     });
     list.querySelectorAll('[data-agtok]').forEach(el => el.onchange = () => upd(el.dataset.agtok, { maxTokens: Math.max(256, parseInt(el.value) || 2000) }));
