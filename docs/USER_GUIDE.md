@@ -84,7 +84,9 @@ It runs **top-down**. The revenue target (or the ending-ARR goal that derives it
 
 ---
 
-## 4½. Definitions a CFO will ask about
+## 5. Definitions the review panel will ask about
+
+### Definitions a CFO will ask about
 
 These are the exact conventions the engine uses — quote them with confidence.
 
@@ -100,7 +102,39 @@ These are the exact conventions the engine uses — quote them with confidence.
 
 **Two cost-efficiency lenses (Readiness page).** *GTM cost % of net-new ARR* — spend per dollar added; the guardrail ceiling applies here. *GTM cost % of run-rate revenue* — spend against the recognized-revenue proxy (ending ARR ÷ 12); this is the line that should trend down as the base compounds, and the one most CFOs reach for first.
 
-## 5. Working as a group
+### Definitions a COO will ask about
+
+**Ramp.** Every role line carries a monthly ramp curve (editable; defaults per archetype, e.g. 6 months for sellers). A hire is **full cost from the start month** while output follows the curve — capacity = ramped-equivalent heads × productivity, so the cash-leads-output reality is built in, never assumed away.
+
+**Attrition and backfill.** Annual attrition ÷ 12, applied to the prior-month bench, **rounded to whole people** — small teams legitimately show zero attrition until the base is big enough, and a hire never churns in their own start month. Leavers are assumed tenured (recent cohorts keep their full ramp deficit), so capacity loss is immediate and complete. The model **never auto-backfills**: net growth is exactly your hires minus attrition, and the checks flag teams draining without replacement.
+
+**Managers.** Auto-added per team at ⌈ICs ÷ span⌉, priced at their own rate-card role. They are pure overhead — no quota, no capacity — which is why thin spans show up as cost without output.
+
+**Hiring physics.** Hire months are **start months**; the requisition must open time-to-fill days earlier (the hiring-plan CSV computes the open-by date for every req). One-time costs — recruiting % × agency share + onboarding — land in the start month. The max-starts-per-month driver constrains the auto-drafter; manual plans beyond it surface through the checks rather than being blocked.
+
+### Definitions a CRO will ask about
+
+**Targets vs bookings (the lag).** Monthly new-business targets are **sales-effort plans**. Bookings land `sales-cycle lag` months after the effort month: the first lag months of the plan book nothing, and effort in the final lag months remains in-flight — generated but uncredited — at the horizon. The goal solver accounts for this when deriving implied targets from ending-ARR goals, so goals still reconcile.
+
+**Productivity vs quota.** Enter **expected attained production** per fully-ramped rep — not assigned quota. Variable comp is costed at the attainment guardrail (default 90% of OTE). Quota over-assignment lives in one explicit place: the coverage policy dial on the Sales team.
+
+**Channel and funnel math.** Each channel must generate pipeline = its share of target ÷ its win rate; deals = revenue ÷ ASP, rounded up to whole deals. Funnel teams chain backwards — MQL → SQL → opportunity — with stage conversions rounded up at every step, plus any installed-base expansion pipeline you route through marketing.
+
+**Seasonality.** Quarterly weights (even, back-loaded 20/24/26/30, or custom), spread evenly across the three months of each quarter.
+
+**Coverage.** Capacity ÷ same-month target, per team per month. SHORT flags mark the months where the staffed bench cannot generate the plan — and through the lag, a SHORT effort month surfaces as missed bookings months later.
+
+### Definitions a CHRO will ask about
+
+**Loaded cost.** Base × (1 + country employer burden) + OTE × attainment, blended across the role's location mix at locked FX budget rates (max(spot, trailing) × (1 + buffer)). Burden applies to **base only** — matching the source workbook — so if your jurisdictions levy payroll taxes on commissions too, set burden slightly higher to compensate.
+
+**Location mix.** Every role's country mix must total 100% (the validator raises an error otherwise, and country deletion auto-rebalances). The blended rate is therefore an honest weighted price of where the role actually sits, not a single-site guess.
+
+**Cost from day one.** People are paid from their start month; productivity ramps. Combined with one-time hiring costs in the start month, a hiring wave's true cash profile is visible before its output is.
+
+**Attrition.** Same convention as the COO section: whole-person, monthly, on the prior-month bench, never auto-backfilled — what you see in net adds is what the plan actually delivers.
+
+## 6. Working as a group
 
 - **The ledger chips** (the small `+` beside numbers) are how the plan becomes defendable. Click one → assign an **owner tag** (set once, picked from existing tags) → the group debates in the comment trail → status moves PROPOSED → CHALLENGED → AGREED.
 - The Ledger page groups by owner tag, filters by status/owner, and counts what's still open. A plan ships when everything material reads AGREED.
@@ -110,7 +144,7 @@ These are the exact conventions the engine uses — quote them with confidence.
 
 ---
 
-## 6. The AI layer
+## 7. The AI layer
 
 - **Board Review**: CFO, COO, CRO Skeptic, and CHRO each receive the entire live model — inputs, computed results, deterministic flags, and your ledger — and return a verdict plus specific, quantified challenges. Push any challenge into the ledger as CHALLENGED for the owning team to answer. A Chief-of-Staff synthesis consolidates the four into a board-readiness call.
 - **Research agents** (Rates & FX): comp-band research per role × country and FX rate research, both with web search and cited sources, both apply-with-one-click. Treat them as market research, not your comp philosophy.
@@ -118,7 +152,7 @@ These are the exact conventions the engine uses — quote them with confidence.
 
 ---
 
-## 6½. Outputs — fueling the next step
+## 7½. Outputs — fueling the next step
 
 On the Dashboard, under the KPIs:
 
@@ -127,7 +161,7 @@ On the Dashboard, under the KPIs:
 - **Board pack (HTML)** — a print-ready single page: KPIs, the revenue bridge, investment by team per year, readiness verdicts, and assumption-governance status. Open and print to PDF.
 - **Defendability brief** (Ledger page) — the full assumption trail with owners, statuses and discussion.
 
-## 7. How to do common things
+## 8. How to do common things
 
 **Change the revenue target.** Plan Builder → Model Drivers. Or set an ending-ARR goal and click "Use implied targets".
 
@@ -155,7 +189,7 @@ On the Dashboard, under the KPIs:
 
 ---
 
-## 8. Notes & caveats
+## 9. Notes & caveats
 
 - **Demo data**: a fresh model is the reference workbook's sample plan ($6M/$9M targets, $8M base, 26 ending heads). The dashboard banner stays until you dismiss it — do that only when the numbers are yours.
 - **Persistence is per-browser.** Export regularly if the machine is shared. Versions live in the same browser storage.

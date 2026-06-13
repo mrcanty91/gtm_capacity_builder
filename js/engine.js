@@ -197,7 +197,11 @@
         const hm = m - k;
         if (hm >= 0) unproductive += (hires[hm] || 0) * (1 - Math.min(1, r[k]));
       }
-      ramped[m] = ending[m] - unproductive;
+      // floor at 0: heavy attrition during a hiring wave could otherwise push the
+      // ramp deficit past the remaining bench and produce negative capacity.
+      // Convention: leavers are assumed tenured — recent cohorts keep their full
+      // ramp deficit — so capacity loss from attrition is immediate and complete.
+      ramped[m] = Math.max(0, ending[m] - unproductive);
     }
     return ramped;
   }
