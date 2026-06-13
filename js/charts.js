@@ -207,15 +207,24 @@
       const y = P.t + i * rowH + rowH / 2;
       const t = el('text', { x: P.l - 10, y: y + 4, 'text-anchor': 'end', fill: '#FAFAFA', 'font-size': 12, 'font-family': 'Inter Tight, sans-serif' }, svg);
       t.textContent = it.label;
+      const bothZero = Math.abs(it.low) < 0.5 && Math.abs(it.high) < 0.5;
       [[it.low, '#737373'], [it.high, ACCENT]].forEach(([v, color], vi) => {
         const wpx = Math.abs(v) / maxAbs * span * 0.95;
         const x = v < 0 ? cx - wpx : cx;
         const bar = el('rect', { x, y: y - 9, width: Math.max(1, wpx), height: 18, fill: color }, svg);
         bar.addEventListener('mousemove', e => hoverTip(container).show(e, `${it.label}\n${vi === 0 ? 'DOWNSIDE' : 'UPSIDE'}  ${(v >= 0 ? '+' : '−')}${fmtVal(Math.abs(v))}`));
         bar.addEventListener('mouseleave', () => hoverTip(container).hide());
-        const lx = v < 0 ? cx - wpx - 6 : cx + wpx + 6;
-        const tv = el('text', { x: lx, y: y + 4, 'text-anchor': v < 0 ? 'end' : 'start', fill: '#A6A6A6', 'font-size': 10, 'font-family': 'Inter Tight, Arial, sans-serif' }, svg);
-        tv.textContent = (v >= 0 ? '+' : '−') + fmtShort(Math.abs(v));
+        if (bothZero && vi === 1) return; // both deltas ~0: one shared ±0 label (drawn for vi 0)
+        const zero = Math.abs(v) < 0.5;
+        // side: follows the bar's sign, but a zero-width bar takes its index side
+        // (low = left, high = right) so the two labels can never stack at the centre
+        const leftSide = zero ? vi === 0 : v < 0;
+        const inside = wpx > 50; // wide bars label INSIDE — keeps long values out of the row-label gutter
+        let lx, anchor;
+        if (inside) { lx = leftSide ? cx - wpx + 5 : cx + wpx - 5; anchor = leftSide ? 'start' : 'end'; }
+        else { lx = leftSide ? cx - wpx - 6 : cx + wpx + 6; anchor = leftSide ? 'end' : 'start'; }
+        const tv = el('text', { x: lx, y: y + 4, 'text-anchor': anchor, fill: inside ? (color === ACCENT ? '#0A0A0A' : '#FAFAFA') : '#A6A6A6', 'font-size': 10, 'font-family': 'Inter Tight, Arial, sans-serif' }, svg);
+        tv.textContent = bothZero ? '±0' : (zero ? '0' : (v >= 0 ? '+' : '−') + fmtShort(Math.abs(v)));
       });
     });
     el('line', { x1: cx, y1: P.t, x2: cx, y2: Hh - P.b, stroke: '#404040', 'stroke-width': 1 }, svg);
@@ -267,11 +276,16 @@
       const nt = el('text', { x: x + bw / 2, y: plot.y + plot.h + 16, 'text-anchor': 'middle', fill: '#737373', 'font-size': 9, 'font-family': 'Inter Tight, Arial, sans-serif' }, svg);
       nt.textContent = b.name.toUpperCase();
     });
-    // goal line
+    // goal line — label sits at the LEFT edge (the ending bar owns the right edge, and when
+    // ending ≈ goal the two labels collided). Dodge below the line when the start bar's
+    // value label is nearby or the line hugs the top of the plot.
     if (opts.goal) {
       const gy = yPix(opts.goal);
       el('line', { x1: plot.x, y1: gy, x2: plot.x + plot.w, y2: gy, stroke: ACCENT, 'stroke-width': 1.5, 'stroke-dasharray': '6 4' }, svg);
-      const gt = el('text', { x: plot.x + plot.w - 4, y: gy - 5, 'text-anchor': 'end', fill: ACCENT, 'font-size': 10, 'font-family': 'Inter Tight, Arial, sans-serif' }, svg);
+      const firstLabelY = bars.length ? yPix(bars[0].y1) - 5 : -999;
+      const labelAbove = gy - 5;
+      const crowded = Math.abs(labelAbove - firstLabelY) < 12 || labelAbove < 12;
+      const gt = el('text', { x: plot.x + 4, y: crowded ? gy + 13 : labelAbove, 'text-anchor': 'start', fill: ACCENT, 'font-size': 10, 'font-family': 'Inter Tight, Arial, sans-serif' }, svg);
       gt.textContent = 'GOAL ' + fmtShort(opts.goal);
     }
     render(container, svg, null, opts.title);
