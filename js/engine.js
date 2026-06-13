@@ -568,7 +568,7 @@
     s.hiringHealth.forEach((h, m) => { if (h === 'AHEAD OF SUPPORT') aheadMonths.push(labels[m]); });
     if (aheadMonths.length) checks.push({
       severity: 'error', team: 'Role Readiness', title: `Hiring ahead of revenue support in ${aheadMonths.length} month(s)`,
-      detail: `Months: ${aheadMonths.join(', ')}. ARR/GTM-head below $${fmtN(model.guardrails.arrPerHeadFloor)} floor or GTM cost above ${Math.round(model.guardrails.costPctCeiling * 100)}% of revenue while adding heads.`
+      detail: `Months: ${aheadMonths.join(', ')}. ARR/GTM-head below $${fmtN(model.guardrails.arrPerHeadFloor)} floor or GTM cost above ${Math.round(model.guardrails.costPctCeiling * 100)}% of net-new ARR while adding heads.`
     });
 
     s.selfFunding.filter(r => r.verdict === 'LONG PAYBACK').forEach(r => checks.push({

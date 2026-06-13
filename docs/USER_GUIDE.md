@@ -84,6 +84,22 @@ It runs **top-down**. The revenue target (or the ending-ARR goal that derives it
 
 ---
 
+## 4½. Definitions a CFO will ask about
+
+These are the exact conventions the engine uses — quote them with confidence.
+
+**Net-new ARR (not "revenue").** What the model adds each month: new-business bookings + expansion + renewal escalator. It is ARR *added*, not recognized (GAAP) revenue — recognized revenue lags as contracts are delivered. Every label in the app says net-new ARR for this reason.
+
+**CAC ratio.** Cumulative **S&M cost only** (sales, prospecting, marketing, channel — CS and AM are deliberately excluded) ÷ cumulative **booked new-business ARR**. A clean new-business CAC: 0.75 means $0.75 of S&M buys $1.00 of new ARR. Expansion ARR is not in the denominator, so blended efficiency always looks better than this number — it's the conservative one.
+
+**Payback.** Gross-margin-adjusted, per role: loaded annual cost ÷ (annual ARR output × gross margin), in months. Gross margin is an editable guardrail (default 80%). An AE quoted at 14 months pays back on *margin dollars*, not bookings — the convention a finance team expects.
+
+**Churn.** Gross retention is applied as a monthly rate compounding on the full prior-month base, *including* in-year bookings. That's deliberately conservative versus annual-contract reality (new logos can't churn before first renewal). If your contracts are annual, true churn will land slightly better than planned.
+
+**Escalator vs expansion.** Two different dollars: the escalator is price uplift on the *surviving* base (converted to an exact geometric monthly rate, so 3%/yr compounds to precisely 3%); expansion is AM-driven upsell, either capacity-derived or committed as a % of book. They never double-count.
+
+**Two cost-efficiency lenses (Readiness page).** *GTM cost % of net-new ARR* — spend per dollar added; the guardrail ceiling applies here. *GTM cost % of run-rate revenue* — spend against the recognized-revenue proxy (ending ARR ÷ 12); this is the line that should trend down as the base compounds, and the one most CFOs reach for first.
+
 ## 5. Working as a group
 
 - **The ledger chips** (the small `+` beside numbers) are how the plan becomes defendable. Click one → assign an **owner tag** (set once, picked from existing tags) → the group debates in the comment trail → status moves PROPOSED → CHALLENGED → AGREED.

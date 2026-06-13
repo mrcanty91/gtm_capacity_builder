@@ -462,12 +462,12 @@
     const kpis = [
       { label: `${H}-mo GTM run-cost`, value: fmtShort(t.cost), sub: fmt$(t.cost),
         math: `Every team's monthly loaded cost, summed over ${H} months. Loaded cost per head = base × (1 + country burden) + variable × attainment, priced at the FX budget rate (max(spot, trailing) × (1 + buffer)), plus one-time hire costs (recruiting share × agency fee + onboarding). Total = ${fmt$(t.cost)}.` },
-      { label: `${H}-mo total revenue`, value: fmtShort(t.revenue), sub: `booked ${fmtShort(t.booked)} + expansion ${fmtShort(t.expansion)}`,
-        math: `New business ${fmt$(t.booked)} (monthly targets with seasonality) + expansion ${fmt$(t.expansion)}${(model.config.expTargetPct || 0) > 0 ? ` (target ${Math.round(model.config.expTargetPct * 100)}% of book/yr)` : ' (AM capacity-driven)'} + renewal escalator ${fmt$(t.builtIn)} on the retained base = ${fmt$(t.revenue)}.` },
+      { label: `${H}-mo net-new ARR`, value: fmtShort(t.revenue), sub: `booked ${fmtShort(t.booked)} + expansion ${fmtShort(t.expansion)}`,
+        math: `New business ${fmt$(t.booked)} (monthly targets with seasonality) + expansion ${fmt$(t.expansion)}${(model.config.expTargetPct || 0) > 0 ? ` (target ${Math.round(model.config.expTargetPct * 100)}% of book/yr)` : ' (AM capacity-driven)'} + renewal escalator ${fmt$(t.builtIn)} on the retained base = ${fmt$(t.revenue)}. This is ARR ADDED in the window — not recognized (GAAP) revenue, which lags as contracts are delivered.` },
       { label: 'Ending GTM headcount', value: t.endingHeadcount, sub: `${t.hires} hires · ${t.attrition} lost to attrition`,
         math: `Starting bench + ${t.hires} planned hires − ${t.attrition} expected attrition (each role line's annual % applied monthly, rounded to whole heads) = ${t.endingHeadcount} at month ${H}.` },
       { label: 'New-business CAC ratio', value: t.finalCAC.toFixed(2), sub: 'cumulative S&M ÷ booked ARR', accent: t.finalCAC > 1,
-        math: `Cumulative S&M cost ${fmt$(cumSM)} ÷ cumulative booked new-business ARR ${fmt$(cumBooked)} = ${t.finalCAC.toFixed(2)}. Below 1.0 means $1 of spend buys more than $1 of new ARR; your guardrail ceiling is ${model.guardrails && model.guardrails.cacCeiling ? model.guardrails.cacCeiling : '—'}.` },
+        math: `Cumulative S&M cost ${fmt$(cumSM)} ÷ cumulative booked new-business ARR ${fmt$(cumBooked)} = ${t.finalCAC.toFixed(2)}. S&M only — CS and AM costs are deliberately excluded, so this is a clean new-business CAC. Below 1.0 means $1 of S&M buys more than $1 of new ARR. Payback (Readiness page) applies your ${Math.round((model.guardrails.grossMargin || 0.8) * 100)}% gross-margin guardrail on top.` },
       { label: 'Ending ARR base', value: fmtShort(t.endingARR), sub: fmt$(t.endingARR),
         math: `Start ${fmt$(model.config.startingARR || 0)} + new business ${fmt$(t.booked)} + expansion ${fmt$(t.expansion)} + escalator ${fmt$(t.builtIn)} − churn ${fmt$(churnTot)} (${Math.round((model.config.grossRetention != null ? model.config.grossRetention : 0.9) * 100)}% GRR) = ${fmt$(t.endingARR)}. Capacity-feasible (staffed) version: ${fmt$(t.feasibleEndingARR)}.` }
     ];
@@ -486,13 +486,13 @@
     const teams = computed.teams;
     Charts.stackedBars($('#chCost'), computed.labels, teams.map((tm, i) => ({ name: tm.name, data: tm.cost })), { title: 'MONTHLY RUN-COST BY TEAM ($)' });
     Charts.lines($('#chRev'), computed.labels, [
-      { name: 'Total revenue', data: computed.summary.totalRevenue, accent: true },
+      { name: 'Net-new ARR', data: computed.summary.totalRevenue, accent: true },
       { name: 'GTM cost', data: computed.summary.totalCost }
-    ], { title: 'REVENUE VS COST ($/MO) — SPEND LEADS BOOKINGS BY ' + model.config.salesCycleLag + ' MO' });
+    ], { title: 'NET-NEW ARR VS COST ($/MO) — SPEND LEADS BOOKINGS BY ' + model.config.salesCycleLag + ' MO' });
     Charts.steps($('#chHeads'), computed.labels, teams.map(tm => ({ name: tm.name, data: tm.headcount })), { title: 'GTM HEADCOUNT (ENDING, STACKED)' });
     Charts.lines($('#chCac'), computed.labels, [
       { name: 'CAC ratio', data: computed.summary.cac, accent: true },
-      { name: 'GTM cost % of revenue', data: computed.summary.costPctRevenue }
+      { name: 'GTM cost % of net-new ARR', data: computed.summary.costPctRevenue }
     ], { title: 'UNIT ECONOMICS — CAC RATIO & COST % OF REVENUE', threshold: model.guardrails.costPctCeiling });
 
     renderScenarioCompare();
@@ -547,7 +547,7 @@
     headcount: { label: 'GTM headcount', plan: () => computed.summary.totalHeadcount },
     cost: { label: 'GTM cost $/mo', plan: () => computed.summary.totalCost },
     bookings: { label: 'New business booked $/mo', plan: () => computed.summary.bookedRevenue },
-    revenue: { label: 'Total revenue $/mo', plan: () => computed.summary.totalRevenue },
+    revenue: { label: 'Net-new ARR $/mo', plan: () => computed.summary.totalRevenue },
     arr: { label: 'Ending ARR $', plan: () => computed.summary.endingARR }
   };
 
@@ -1095,7 +1095,7 @@
       const grrPct = Math.round((model.config.grossRetention != null ? model.config.grossRetention : 0.9) * 100);
       ask({
         title: 'Revenue bridge — the math (Year 1)',
-        message: `Start ${fmt$(b.start || 0)} → churn −${fmt$(b.churn || 0)} (${grrPct}% gross retention on the renewing base) → escalator +${fmt$(b.esc || 0)} (${((model.config.renewalEscalator || 0) * 100).toFixed(1)}%/yr on what's retained) → new business +${fmt$(b.nb || 0)} (the bookings targets) → expansion +${fmt$(b.exp || 0)} = ending ${fmt$(b.end || 0)}. "Feasible (staffed)" ${fmt$(b.feas || 0)} re-runs the same bridge but caps bookings at what the hired sales bench can actually produce and expansion at AM capacity — the gap between the two columns is the staffing argument.`,
+        message: `Start ${fmt$(b.start || 0)} → churn −${fmt$(b.churn || 0)} (${grrPct}% gross retention on the renewing base) → escalator +${fmt$(b.esc || 0)} (${((model.config.renewalEscalator || 0) * 100).toFixed(1)}%/yr on what's retained) → new business +${fmt$(b.nb || 0)} (the bookings targets) → expansion +${fmt$(b.exp || 0)} = ending ${fmt$(b.end || 0)}. "Feasible (staffed)" ${fmt$(b.feas || 0)} re-runs the same bridge but caps bookings at what the hired sales bench can actually produce and expansion at AM capacity — the gap between the two columns is the staffing argument. Churn convention: ${grrPct}% gross retention is applied as a monthly rate compounding on the FULL prior-month base, including in-year bookings — deliberately conservative versus annual-contract reality, where new logos can't churn before first renewal.`,
         okText: 'Got it'
       });
     };
@@ -2461,7 +2461,7 @@
         ${fld({ path: 'guardrails.grossMargin', label: 'Gross margin', type: 'pct', ledger: { teamId: 'guardrails', key: 'gm', label: 'Guardrail · gross margin' } })}
         ${fld({ path: 'guardrails.paybackMonths', label: 'Target payback (months)', type: 'int', ledger: { teamId: 'guardrails', key: 'payback', label: 'Guardrail · target payback' } })}
         ${fld({ path: 'guardrails.arrPerHeadFloor', label: 'ARR per GTM head — floor $', type: 'num', ledger: { teamId: 'guardrails', key: 'arrfloor', label: 'Guardrail · ARR/head floor' } })}
-        ${fld({ path: 'guardrails.costPctCeiling', label: 'GTM cost % of revenue — ceiling', type: 'pct', ledger: { teamId: 'guardrails', key: 'costceil', label: 'Guardrail · cost % ceiling' } })}
+        ${fld({ path: 'guardrails.costPctCeiling', label: 'GTM cost % of net-new ARR — ceiling', type: 'pct', ledger: { teamId: 'guardrails', key: 'costceil', label: 'Guardrail · cost % ceiling' } })}
       </div>`;
     bindFields(g);
 
@@ -2469,7 +2469,8 @@
       { name: 'ARR / GTM head', data: computed.readiness.arrPerHead, accent: true }
     ], { title: 'ARR PER GTM HEAD VS FLOOR', threshold: model.guardrails.arrPerHeadFloor });
     Charts.lines($('#chCostPct'), computed.labels, [
-      { name: 'GTM cost % of revenue', data: computed.readiness.costPctRevenue, accent: true }
+      { name: 'GTM cost % of net-new ARR', data: computed.readiness.costPctRevenue, accent: true },
+      { name: 'GTM cost % of run-rate revenue', data: computed.summary.totalCost.map((c, m) => { const rr = (computed.summary.endingARR[m] || 0) / 12; return rr > 0 ? c / rr : 0; }), dashed: true }
     ], { title: 'GTM COST % OF REVENUE VS CEILING', threshold: model.guardrails.costPctCeiling });
 
     renderSensitivity();
@@ -2513,7 +2514,7 @@
   ];
   const SENS_METRICS = {
     endingARR: { label: 'Ending ARR', get: r => r.summary.totals.endingARR },
-    revenue: { label: 'Total revenue', get: r => r.summary.totals.revenue },
+    revenue: { label: 'Net-new ARR', get: r => r.summary.totals.revenue },
     cost: { label: 'GTM cost', get: r => r.summary.totals.cost },
     cac: { label: 'CAC ratio (×100)', get: r => r.summary.totals.finalCAC * 100 }
   };
@@ -2627,7 +2628,7 @@
     lines.push(`## The ask in one view`);
     lines.push(`| Metric | Value |\n|---|---|`);
     lines.push(`| ${computed.H}-mo GTM run-cost | ${fmt$(t.cost)} |`);
-    lines.push(`| ${computed.H}-mo total revenue | ${fmt$(t.revenue)} (booked ${fmt$(t.booked)} + expansion ${fmt$(t.expansion)}) |`);
+    lines.push(`| ${computed.H}-mo net-new ARR | ${fmt$(t.revenue)} (booked ${fmt$(t.booked)} + expansion ${fmt$(t.expansion)}) |`);
     lines.push(`| Ending GTM headcount | ${t.endingHeadcount} (${t.hires} hires, ${t.attrition} attrition) |`);
     lines.push(`| New-business CAC ratio | ${t.finalCAC.toFixed(2)} |`);
     lines.push(`| Ending ARR base | ${fmt$(t.endingARR)} |\n`);
@@ -2831,7 +2832,7 @@
     const money = v => fmtShort(v), plain = v => String(Math.round(v * 100) / 100);
     let html = `<div class="tbl-wrap mt-2"><table><thead><tr><th></th><th>${esc(nameA)}</th><th>${esc(nameB)}</th><th>Δ</th></tr></thead><tbody>
       ${dRow('GTM cost', tA.cost, tB.cost, money)}
-      ${dRow('Total revenue', tA.revenue, tB.revenue, money)}
+      ${dRow('Net-new ARR', tA.revenue, tB.revenue, money)}
       ${dRow('Ending ARR', tA.endingARR, tB.endingARR, money)}
       ${dRow('Feasible ARR (staffed)', tA.feasibleEndingARR, tB.feasibleEndingARR, money)}
       ${dRow('Ending headcount', tA.endingHeadcount, tB.endingHeadcount, plain)}
@@ -3033,10 +3034,10 @@
     const S = computed.summary;
     rows.push(['GTM', 'TOTAL RUN-COST', ...money(S.totalCost), Math.round(S.totals.cost)]);
     rows.push([]);
-    rows.push(['Revenue', 'New business booked (lag-adj)', ...money(S.bookedRevenue), Math.round(S.totals.booked)]);
-    rows.push(['Revenue', 'Expansion (AM)', ...money(S.expansion), Math.round(S.totals.expansion)]);
-    rows.push(['Revenue', 'Built-in growth (escalator)', ...money(S.builtInGrowth), Math.round(S.totals.builtIn || 0)]);
-    rows.push(['Revenue', 'TOTAL REVENUE', ...money(S.totalRevenue), Math.round(S.totals.revenue)]);
+    rows.push(['Net-new ARR', 'New business booked (lag-adj)', ...money(S.bookedRevenue), Math.round(S.totals.booked)]);
+    rows.push(['Net-new ARR', 'Expansion (AM)', ...money(S.expansion), Math.round(S.totals.expansion)]);
+    rows.push(['Net-new ARR', 'Built-in growth (escalator)', ...money(S.builtInGrowth), Math.round(S.totals.builtIn || 0)]);
+    rows.push(['Net-new ARR', 'TOTAL NET-NEW ARR', ...money(S.totalRevenue), Math.round(S.totals.revenue)]);
     exportFPNA(); // FP&A long-format + FX exposure ride along with the budget download
     rows.push(['Revenue', 'Ending ARR base', ...money(S.endingARR), '']);
     rows.push([]);
@@ -3191,7 +3192,7 @@ ${sections}
       { name: 'Ending', value: lastBr.end || 0, kind: 'end' }
     ], { goal: goalY }));
     const costRevSVG = chartHTML(div => Charts.lines(div, computed.labels, [
-      { name: 'Total revenue', data: computed.summary.totalRevenue, accent: true },
+      { name: 'Net-new ARR', data: computed.summary.totalRevenue, accent: true },
       { name: 'GTM cost', data: computed.summary.totalCost }
     ], {}));
     const scRows = scenarioRows();
@@ -3219,7 +3220,7 @@ ${sections}
 <p class="meta">Generated ${today()} · Scenario <b>${esc(model.config.scenario)}</b> · ${computed.H}-month horizon from ${esc(model.config.startMonth)} · Starting ARR ${fmtM(model.config.startingARR || 0)} · ${esc(String(model.teams.length))} teams</p>
 <div>
   <span class="kpi"><b>${fmtM(t.cost)}</b>GTM run-cost (${computed.H}mo)</span>
-  <span class="kpi"><b>${fmtM(t.revenue)}</b>Total revenue</span>
+  <span class="kpi"><b>${fmtM(t.revenue)}</b>Net-new ARR</span>
   <span class="kpi"><b>${t.endingHeadcount}</b>Ending headcount</span>
   <span class="kpi"><b>${t.finalCAC.toFixed(2)}</b>New-business CAC ratio</span>
   <span class="kpi"><b>${fmtM(t.endingARR)}</b>Ending ARR</span>
@@ -3231,7 +3232,7 @@ ${sections}
 <table><thead><tr><th></th><th>Start</th><th>New business</th><th>Expansion</th><th>Escalator</th><th>Churn</th><th>Ending</th><th>Goal</th><th>&Delta;</th></tr></thead><tbody>
 ${br.map(b => `<tr><td>Year ${b.y + 1}</td><td>${fmtM(b.start)}</td><td>+${fmtM(b.nb)}</td><td>+${fmtM(b.exp)}</td><td>+${fmtM(b.esc)}</td><td>−${fmtM(b.churn)}</td><td><b>${fmtM(b.end)}</b></td><td>${b.goal ? fmtM(b.goal) : '—'}</td><td>${b.goal ? `<span class="${b.end < b.goal * 0.995 ? 'bad' : 'ok'}">${b.end - b.goal >= 0 ? '+' : ''}${fmtM(b.end - b.goal)}</span>` : ''}</td></tr>`).join('')}
 </tbody></table>
-<h2>Spend vs revenue — monthly</h2>
+<h2>Spend vs net-new ARR — monthly</h2>
 <div style="background:#141414;padding:16px 16px 8px;margin-top:8px">${costRevSVG}</div>
 <p class="note">Spend leads bookings by the ${esc(String(model.config.salesCycleLag))}-month sales cycle; the crossover month is the cash-trough turn.</p>
 <h2>Investment by team</h2>

@@ -80,7 +80,7 @@ const nav = async p => { click($(`.nav-tab[data-page=${p}]`)); await flush(); };
   expect('pack: downloads', !!pack);
   expect('pack: executive summary auto-written with numbers', /Executive summary/.test(pack) && /grows ARR from \$/.test(pack));
   expect('pack: waterfall SVG embedded', /<svg/.test(pack) && /CHURN/.test(pack) && /ESCALATOR/.test(pack));
-  expect('pack: spend-vs-revenue chart embedded', /Spend vs revenue/.test(pack) && (pack.match(/<svg/g) || []).length >= 2);
+  expect('pack: spend-vs-net-new-ARR chart embedded', /Spend vs net-new ARR/.test(pack) && (pack.match(/<svg/g) || []).length >= 2);
   expect('pack: scenario table with feasible ARR', /three weathers/.test(pack) && /Feasible ARR/.test(pack));
   expect('pack: defendability counts in governance', /defendability at export/.test(pack));
   expect('pack: no NaN/undefined anywhere', !/NaN|undefined/.test(pack));
