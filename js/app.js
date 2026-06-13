@@ -17,7 +17,7 @@
       const raw = localStorage.getItem(LS_MODEL);
       if (raw) { const m = JSON.parse(raw); if (m && m.config && m.teams) return m; }
     } catch (e) { /* fresh */ }
-    return Engine.defaultModel();
+    return blankModel(); // first run is a clean slate — the demo plan loads only on demand
   }
   // ---- undo: snapshot stack fed by saveModel ----
   const undoStack = [];
@@ -3360,11 +3360,11 @@ ${(lastSynthesis.top_actions || []).length ? `<ol style="font-size:13px">${lastS
     return Engine.migrate(m);
   }
   $('#btnDashReset').onclick = async () => {
-    if (!(await uiConfirm('Reset to demo defaults?', 'Your ledger and edits will be lost. Undo can bring back the last 15 states.', 'Reset'))) return;
-    saveModel(); model = Engine.defaultModel(); recompute(); render(); toast('Model reset to demo defaults');
+    if (!(await uiConfirm('Load the demo plan?', 'Replaces the current model with the sample plan from the reference workbook. Undo can bring back the last 15 states.', 'Load demo'))) return;
+    saveModel(); model = Engine.defaultModel(); recompute(); render(); toast('Demo plan loaded');
   };
   $('#btnStartBlank').onclick = async () => {
-    if (!(await uiConfirm('Start with a blank model?', 'Clears the demo org: no teams, no roles, US-only geography, zeroed goals. You build from Team Setup up. Undo can bring back the last 15 states.', 'Start blank'))) return;
+    if (!(await uiConfirm('Start with a blank model?', 'Clears the current model: no teams, no roles, US-only geography, zeroed goals. You build from Team Setup up. Undo can bring back the last 15 states.', 'Start blank'))) return;
     saveModel(); model = blankModel(); recompute(); render();
     document.querySelector('.nav-tab[data-page=rates]').click();
     toast('Blank model — start with 1 · Team Setup');

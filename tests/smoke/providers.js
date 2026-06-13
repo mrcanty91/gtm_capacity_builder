@@ -15,7 +15,10 @@ w.fetch = (url, init) => {
 };
 const errs = [];
 w.addEventListener('error', e => errs.push(e.message));
-for (const f of ['engine.js', 'charts.js', 'agents.js', 'app.js']) w.eval(fs.readFileSync(dir + '/js/' + f, 'utf8'));
+for (const f of ['engine.js', 'charts.js', 'agents.js', 'app.js']) {
+  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.defaultModel()))"); // suites exercise the populated demo plan
+  w.eval(fs.readFileSync(dir + '/js/' + f, 'utf8'));
+}
 const $ = s => w.document.querySelector(s);
 const $$ = s => Array.from(w.document.querySelectorAll(s));
 const click = el => (typeof el === 'string' ? $(el) : el).dispatchEvent(new w.Event('click', { bubbles: true }));

@@ -183,7 +183,7 @@ On the Dashboard, under the KPIs:
 
 **Start blank.** Dashboard → "○ Start blank": empty model (no teams, no roles, US-only geography, zeroed goals) — build your org from Team Setup up. Undo brings the previous state back.
 
-**Reset everything.** Dashboard → "↺ Reset demo data" (also on the Agents tab). The demo plan returns, banner and all.
+**Load the demo / start over.** Dashboard → "↺ Load demo data" swaps in the sample plan (banner and all); "○ Start blank" returns you to a clean model. A fresh install opens blank.
 
 **Team names are unique.** Naming a team the same as an existing one auto-suffixes ("Sales 2") so rails, checks and exports stay unambiguous.
 

@@ -12,7 +12,7 @@ GTM capacity planning usually lives in a fragile spreadsheet: one owner, formula
 
 1. Clone or download this repo.
 2. Open `index.html` in a browser. That's it — everything persists to `localStorage`.
-3. Explore the demo plan, or hit **○ Start blank** on the dashboard and build your own (a setup checklist guides you).
+3. The app opens blank — a setup checklist on the dashboard walks you through the build. Hit **↺ Load demo data** to explore a fully populated example plan first.
 4. Optional — enable the AI agents: **Agents tab → pick a provider → paste a key.**
 
 ## Bring your own LLM

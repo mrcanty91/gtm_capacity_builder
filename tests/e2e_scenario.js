@@ -19,6 +19,7 @@ w.HTMLAnchorElement.prototype.click = function () { if (this.download) lastDownl
 async function readDownload() { return lastDownload ? { name: lastDownload.name, text: await lastDownload.blob.text() } : null; }
 
 for (const f of ['engine.js', 'charts.js', 'agents.js', 'app.js']) {
+  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.defaultModel()))"); // scenario begins from the demo plan, then resets
   try { w.eval(fs.readFileSync(dir + '/js/' + f, 'utf8')); } catch (e) { scriptErrs.push(f + ': ' + e.message); }
 }
 
