@@ -53,6 +53,21 @@ const okAsk = async () => { await flush(80); if (!$('#askModal').classList.conta
   click($('.nav-tab[data-page=dashboard]')); await flush();
   expect('blank: start-blank returns the clean state', /\b0 teams\b/.test($('#dashSub').textContent) && /SETUP CHECKLIST/.test($('#sampleBanner').textContent));
 
+  // ---- wipe everything: the only control that clears ALL stored keys ----
+  click('#btnDashReset'); await okAsk(); await flush(300); // get some data in place
+  w.eval("localStorage.setItem('ro_capacity_versions', JSON.stringify([{ name: 'x', json: '{}' }]))");
+  w.eval("localStorage.setItem('ro_capacity_settings', JSON.stringify({ provider: { id: 'anthropic', apiKey: 'sk-test' } }))");
+  click($('.nav-tab[data-page=agents]')); await flush(300);
+  expect('wipe: control lives on the Agents page', !!$('#btnWipeAll'));
+  click('#btnWipeAll');
+  expect('wipe: confirms first', await okAsk());
+  await flush(400);
+  const left = ['ro_capacity_model_v2', 'ro_capacity_versions', 'ro_capacity_settings', 'ro_last_export']
+    .map(k => w.eval(`localStorage.getItem('${k}')`)).filter(v => v !== null);
+  expect('wipe: every stored key removed (model, versions, settings/keys, backup marker)', left.length === 0);
+  click($('.nav-tab[data-page=dashboard]')); await flush();
+  expect('wipe: app lands on the clean first-run state', /\b0 teams\b/.test($('#dashSub').textContent) && /SETUP CHECKLIST/.test($('#sampleBanner').textContent));
+
   expect('no script errors through whole suite', errs.length === 0);
   console.log('script errors:', errs.length ? errs.join(' | ') : 'none');
   console.log(fails ? `${fails} FAILURES` : 'ALL PASS');

@@ -13,6 +13,10 @@
 - The model (comp bands, hiring plans, revenue goals) lives in `localStorage` and in any JSON/CSV files you export. Treat exports as confidential — they contain compensation data.
 - The `.gitignore` excludes `*.xlsx` and exported model JSONs so real plans don't end up in commits. Check before you push.
 
+## Removing everything
+
+Agents tab → **Wipe all local data** deletes every key this tool writes (model and ledger, saved runs, settings including API keys, backup marker) in one click. Use it before handing off a shared machine.
+
 ## When agents see your data
 
 Running a board persona or research agent sends the full model brief (assumptions, comp rates, results, ledger) to your chosen LLM provider. If that's not acceptable for your data, use a local provider (Ollama) or don't enable agents — the entire planning tool works without them.

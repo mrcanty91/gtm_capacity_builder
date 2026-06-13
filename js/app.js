@@ -22,7 +22,9 @@
   // ---- undo: snapshot stack fed by saveModel ----
   const undoStack = [];
   let lastSerialized = null;
+  let wipedSession = false; // set by Wipe-all-data: nothing persists again until the page reloads
   function saveModel() {
+    if (wipedSession) return;
     model.meta.savedAt = new Date().toISOString();
     const s = JSON.stringify(model);
     if (lastSerialized !== null && s !== lastSerialized) {
@@ -349,6 +351,7 @@
         <span style="flex:1"></span>
         <button class="btn btn-secondary" id="agSave">Save global settings</button>
         <button class="btn btn-danger" id="btnResetModel">Reset model to defaults</button>
+        <button class="btn btn-danger" id="btnWipeAll" title="Delete everything this tool stores in this browser">🗑 Wipe all local data</button>
       </div>
       <p class="muted small mt-2">Limits are hard stops, not warnings — when a cap is hit, agent calls fail with a clear message instead of spending. Cost is estimated from token counts at list prices; treat it as a guardrail, not an invoice.</p>
       ${limitRecommendationHTML()}`;
@@ -386,8 +389,16 @@
       saveSettings(st); toast('Agent settings saved'); render();
     };
     $('#btnResetModel').onclick = async () => {
-      if (!(await uiConfirm('Reset to workbook defaults?', 'Your ledger and edits will be lost. Undo can bring back the last 15 states.', 'Reset'))) return;
+      if (!(await uiConfirm('Reset to the sample plan?', 'Replaces the current model with the demo plan. Your ledger and edits will be lost. Undo can bring back the last 15 states.', 'Reset'))) return;
       model = Engine.demoModel(); recompute(); render(); toast('Model reset');
+    };
+    $('#btnWipeAll').onclick = async () => {
+      if (!(await uiConfirm('Wipe ALL local data?', 'Deletes everything this tool stores in this browser: the current model and ledger, all saved runs, settings including API keys, and the backup marker. There is no undo for this. Export anything you want to keep first.', 'Wipe everything'))) return;
+      wipedSession = true; // block every persistence path before clearing
+      ['ro_capacity_model_v2', 'ro_capacity_versions', 'ro_capacity_settings', 'ro_last_export'].forEach(k => localStorage.removeItem(k));
+      undoStack.length = 0; lastSerialized = null;
+      try { location.reload(); } catch (e) { /* non-browser context */ }
+      model = blankModel(); recompute(); render(); toast('All local data wiped — fresh start');
     };
 
     const list = $('#agentCfgList');
