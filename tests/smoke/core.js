@@ -10,7 +10,7 @@ w.fetch = () => Promise.reject(new Error('no network'));
 const errs = [];
 w.addEventListener('error', e => errs.push(e.message));
 for (const f of ['engine.js', 'charts.js', 'agents.js', 'app.js']) {
-  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.defaultModel()))"); // suites exercise the populated demo plan
+  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.demoModel()))"); // suites exercise the populated demo plan
   w.eval(fs.readFileSync(dir + '/js/' + f, 'utf8'));
 }
 const $ = s => w.document.querySelector(s);
@@ -32,10 +32,10 @@ const nav = async p => { click($(`.nav-tab[data-page=${p}]`)); await flush(); };
   for (const p of ['dashboard', 'rates', 'drivers', 'builder', 'readiness', 'ledger', 'board', 'agents']) await nav(p);
   expect('boot: all pages render, zero script errors', errs.length === 0);
 
-  // default model reconciles to the workbook
-  const t0 = eng().summary.totals;
-  expect('engine: defaults reconcile to workbook cost', Math.abs(t0.cost - 9812091.60) < 1);
-  expect('engine: defaults reconcile to workbook ending HC', t0.endingHeadcount === 26);
+  // the reconciliation fixture still matches the workbook (independent of the demo plan)
+  const t0 = w.eval('Engine.compute(Engine.defaultModel()).summary.totals');
+  expect('engine: fixture reconciles to workbook cost', Math.abs(t0.cost - 9812091.60) < 1);
+  expect('engine: fixture reconciles to workbook ending HC', t0.endingHeadcount === 26);
 
   // role rename propagates to team references
   await nav('rates');

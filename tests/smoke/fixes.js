@@ -10,7 +10,7 @@ w.fetch = () => Promise.reject(new Error('no network'));
 const errs = [];
 w.addEventListener('error', e => errs.push(e.message));
 for (const f of ['engine.js', 'charts.js', 'agents.js', 'app.js']) {
-  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.defaultModel()))"); // suites exercise the populated demo plan
+  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.demoModel()))"); // suites exercise the populated demo plan
   w.eval(fs.readFileSync(dir + '/js/' + f, 'utf8'));
 }
 const $ = s => w.document.querySelector(s);
@@ -101,7 +101,7 @@ const nav = async p => { click($(`.nav-tab[data-page=${p}]`)); await flush(); };
   m = getModel();
   expect('F2: dashboard reset restores demo defaults (5 countries)', m.fx.length === 5 && m.teams.length === 6);
   const t = eng().summary.totals;
-  expect('F2: reset model reconciles to workbook (cost)', Math.abs(t.cost - 9812091.60) < 1);
+  expect('F2: reset loads the Series B sample plan ($30M ending-ARR goal)', Math.abs(t.endingARR - 30000000) < 50000);
 
   console.log('script errors:', errs.length ? errs.join(' | ') : 'none');
   console.log(fails ? `${fails} FAILURES` : 'ALL PASS');

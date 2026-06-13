@@ -387,7 +387,7 @@
     };
     $('#btnResetModel').onclick = async () => {
       if (!(await uiConfirm('Reset to workbook defaults?', 'Your ledger and edits will be lost. Undo can bring back the last 15 states.', 'Reset'))) return;
-      model = Engine.defaultModel(); recompute(); render(); toast('Model reset');
+      model = Engine.demoModel(); recompute(); render(); toast('Model reset');
     };
 
     const list = $('#agentCfgList');
@@ -440,7 +440,7 @@
       const parts = [];
       if (model.meta && model.meta.sample) parts.push(`<div class="field-notice warn mb-3">
         <div class="fn-head">// DEMO DATA</div>
-        <div class="fn-title">These numbers are the sample plan from the reference workbook — not yours yet.</div>
+        <div class="fn-title">These numbers are a sample plan — a $15M-ARR Series B software company — not yours yet.</div>
         <div class="fn-detail">Targets, rates, teams and hiring plans below are placeholders. Work Step 1 (Rates &amp; FX) and Step 2 (Plan Builder) to make it your plan — then dismiss this so nobody presents demo numbers.</div>
         <div class="row mt-2"><button class="btn btn-secondary" id="btnDismissSample">It's our plan now — dismiss</button></div>
       </div>`);
@@ -3360,8 +3360,8 @@ ${(lastSynthesis.top_actions || []).length ? `<ol style="font-size:13px">${lastS
     return Engine.migrate(m);
   }
   $('#btnDashReset').onclick = async () => {
-    if (!(await uiConfirm('Load the demo plan?', 'Replaces the current model with the sample plan from the reference workbook. Undo can bring back the last 15 states.', 'Load demo'))) return;
-    saveModel(); model = Engine.defaultModel(); recompute(); render(); toast('Demo plan loaded');
+    if (!(await uiConfirm('Load the demo plan?', 'Replaces the current model with the sample plan — a $15M-ARR Series B software company on a 24-month expansion plan. Undo can bring back the last 15 states.', 'Load demo'))) return;
+    saveModel(); model = Engine.demoModel(); recompute(); render(); toast('Demo plan loaded');
   };
   $('#btnStartBlank').onclick = async () => {
     if (!(await uiConfirm('Start with a blank model?', 'Clears the current model: no teams, no roles, US-only geography, zeroed goals. You build from Team Setup up. Undo can bring back the last 15 states.', 'Start blank'))) return;

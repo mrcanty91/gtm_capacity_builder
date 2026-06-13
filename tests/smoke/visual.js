@@ -10,7 +10,7 @@ w.fetch = () => Promise.reject(new Error('no network'));
 const errs = [];
 w.addEventListener('error', e => errs.push(e.message));
 for (const f of ['engine.js', 'charts.js', 'agents.js', 'app.js']) {
-  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.defaultModel()))"); // suites exercise the populated demo plan
+  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.demoModel()))"); // suites exercise the populated demo plan
   w.eval(fs.readFileSync(dir + '/js/' + f, 'utf8'));
 }
 const $ = s => w.document.querySelector(s);

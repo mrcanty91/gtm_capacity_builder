@@ -853,6 +853,44 @@
   // Solve the annual new-business targets needed to hit ending-ARR goals,
   // accounting for churn, expansion and the sales-cycle lag. goals[y] = ending ARR
   // at the end of year y (0/null = no goal for that year).
+  // The user-facing sample plan: a $15M-ARR Series B software company on a
+  // 24-month expansion plan ($15M -> $21M -> $30M ending ARR). Derived from the
+  // structural skeleton in defaultModel() with benchmark-calibrated drivers; it
+  // computes with zero check errors and zero warnings. defaultModel() itself is
+  // the workbook reconciliation fixture and must not change.
+  function demoModel() {
+    const m = defaultModel();
+    Object.assign(m.config, {
+      startingARR: 15000000, arrGoals: [21000000, 30000000], goalsSeeded: true,
+      salesCycleLag: 4, renewalEscalator: 0.03, expTargetPct: 0.10,
+      recruitingPct: 0.15, agencyHirePct: 0.5, onboardingPerHire: 5000,
+      seasonality: { mode: 'backloaded', q: [0.20, 0.24, 0.26, 0.30] }
+    });
+    const T = id => m.teams.find(t => t.id === id);
+    const bench = (id, start, hiresAt) => {
+      const r = T(id).roles[0];
+      r.start = start; r.hires = zeros(m.config.horizon);
+      (hiresAt || []).forEach(mm => r.hires[mm]++);
+    };
+    T('sales').asp = 150000;            // mid-market/enterprise blend
+    T('marketing').costPerMQL = 600;
+    T('partnerships').partnerTypes = [
+      { name: 'Referral', mix: 0.4, ticket: 120000, close: 0.3 },
+      { name: 'Reseller / Channel', mix: 0.3, ticket: 100000, close: 0.25 },
+      { name: 'Tech / ISV', mix: 0.2, ticket: 180000, close: 0.2 },
+      { name: 'SI / Agency', mix: 0.1, ticket: 200000, close: 0.18 }
+    ];
+    // benches sized to the base that built $15M; the only adds the guardrails
+    // accept are the expansion team scaling with the book (Aug 27)
+    bench('sales', 7, []);
+    bench('sdr', 3, []);
+    bench('marketing', 3, []);
+    bench('partnerships', 1, []);
+    bench('am', 3, [13, 13]);
+    m.config.annualTargets = solveTargets(m, m.config.arrGoals).targets.slice();
+    return m;
+  }
+
   function solveTargets(model, goals) {
     const clone = JSON.parse(JSON.stringify(model));
     const H = clone.config.horizon;
@@ -886,7 +924,7 @@
     };
   }
 
-  const Engine = { compute, defaultModel, blendedRates, blendedRateParts, budgetRate, monthLabels, activeMultipliers, migrate, solveTargets, PROD_KEY, PROD_LABEL, DEFAULT_RAMP };
+  const Engine = { compute, defaultModel, demoModel, blendedRates, blendedRateParts, budgetRate, monthLabels, activeMultipliers, migrate, solveTargets, PROD_KEY, PROD_LABEL, DEFAULT_RAMP };
   if (typeof module !== 'undefined' && module.exports) module.exports = Engine;
   else root.Engine = Engine;
 })(typeof window !== 'undefined' ? window : globalThis);

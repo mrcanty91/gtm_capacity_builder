@@ -40,6 +40,14 @@ const okAsk = async () => { await flush(80); if (!$('#askModal').classList.conta
   expect('demo: teams populated after load', !/\b0 teams\b/.test($('#dashSub').textContent));
   expect('demo: checklist yields to the demo banner', !/SETUP CHECKLIST/.test($('#sampleBanner').textContent));
 
+  // ---- demo profile: Series B @ $15M, and it passes its own checks ----
+  const demo = w.eval('Engine.demoModel()');
+  expect('demo: profile is the $15M Series B plan', demo.config.startingARR === 15000000 && demo.config.arrGoals[1] === 30000000);
+  const dr = w.eval('(() => { const r = Engine.compute(Engine.demoModel()); return { e: r.checks.filter(c => c.severity === "error").length, w: r.checks.filter(c => c.severity === "warn").length, end: r.summary.totals.endingARR, hc: r.summary.totals.endingHeadcount }; })()');
+  expect('demo: zero check errors and zero warnings', dr.e === 0 && dr.w === 0);
+  expect('demo: hits the $30M ending-ARR goal', Math.abs(dr.end - 30000000) < 50000);
+  expect('demo: GTM headcount lands in a credible Series B range', dr.hc >= 30 && dr.hc <= 45);
+
   // ---- back to blank ----
   click('#btnStartBlank'); await okAsk(); await flush(400);
   click($('.nav-tab[data-page=dashboard]')); await flush();

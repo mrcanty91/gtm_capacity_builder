@@ -19,7 +19,7 @@ w.HTMLAnchorElement.prototype.click = function () { if (this.download) lastDownl
 async function readDownload() { return lastDownload ? { name: lastDownload.name, text: await lastDownload.blob.text() } : null; }
 
 for (const f of ['engine.js', 'charts.js', 'agents.js', 'app.js']) {
-  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.defaultModel()))"); // scenario begins from the demo plan, then resets
+  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.demoModel()))"); // scenario begins from the demo plan, then resets
   try { w.eval(fs.readFileSync(dir + '/js/' + f, 'utf8')); } catch (e) { scriptErrs.push(f + ': ' + e.message); }
 }
 
@@ -230,6 +230,27 @@ const setPath = async (path, val) => {
     if ($('#channelCard')) {
       const chTxt = $('#channelCard').textContent;
       if (/100\s*%|balanced/i.test(chTxt) || $$('#channelCard [data-path]').length) ok('drivers', 'channel card present with mix inputs');
+    }
+
+    // ============ S2a½ · MERIDIAN'S STARTING ORG ============
+    // A $5M company does not inherit a $15M company's bench. Set Meridian's own
+    // starting heads (and clear inherited hire plans) via the JSON import flow —
+    // the same path a real user takes to load a prepared model.
+    {
+      const mm = getModel();
+      const bench = { sales: 2, sdr: 1, marketing: 1, partnerships: 1, am: 1 };
+      mm.teams.forEach(t => (t.roles || []).forEach(r => {
+        if (bench[t.id] !== undefined) r.start = bench[t.id];
+        r.hires = new Array(mm.config.horizon).fill(0);
+      }));
+      const impInp0 = $('#fileImport');
+      Object.defineProperty(impInp0, 'files', { value: [new w.File([JSON.stringify(mm)], 'meridian-org.json', { type: 'application/json' })], configurable: true });
+      impInp0.dispatchEvent(new w.Event('change', { bubbles: true }));
+      await flush(700); await okAsk(); await flush(500);
+      const mv = getModel();
+      if (mv.teams.find(t => t.id === 'sales').roles[0].start === 2) ok('org', 'Meridian starting bench set (AE 2 / SDR 1 / MK 1 / PM 1 / AM 1, no inherited hires)');
+      else issue('high', 'org', 'could not establish Meridian starting bench via import');
+      await nav('drivers');
     }
 
     // ============ S2b · BUILD THE PLAN (staff-to-goal) ============

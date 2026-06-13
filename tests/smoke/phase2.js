@@ -12,7 +12,7 @@ w.URL.createObjectURL = b => { lastBlob = b; return 'blob:x'; };
 w.URL.revokeObjectURL = () => {};
 w.HTMLAnchorElement.prototype.click = function () { if (this.download) lastDownload = { name: this.download, blob: lastBlob }; };
 for (const f of ['engine.js', 'charts.js', 'agents.js', 'app.js']) {
-  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.defaultModel()))"); // suites exercise the populated demo plan
+  if (f === 'app.js') w.eval("localStorage.setItem('ro_capacity_model_v2', JSON.stringify(Engine.demoModel()))"); // suites exercise the populated demo plan
   w.eval(fs.readFileSync(dir + '/js/' + f, 'utf8'));
 }
 const $ = s => w.document.querySelector(s);
@@ -52,7 +52,14 @@ const nav = async p => { click($(`.nav-tab[data-page=${p}]`)); await flush(); };
   expect('tally: warning count matches computed checks', new RegExp(hty.warns + ' WARNING').test(dc));
 
   // ---- 3. board-pack export gate ----
-  // the demo model carries open check flags, so the gate should engage
+  // the demo plan computes clean, so first CREATE open flags through the UI:
+  // triple the year-2 goal — targets outrun the bench and checks light up
+  await nav('drivers');
+  const goalInp = $$('#configCard input[data-path*="arrGoals"]')[1];
+  change(goalInp, '90M'); await flush(400);
+  if ($('#btnApplyImplied')) { click('#btnApplyImplied'); await flush(500); }
+  const flagged = eng().checks.filter(c => c.severity !== 'info').length;
+  expect('gate-setup: stretch goal opens check flags', flagged > 0);
   await nav('dashboard');
   lastDownload = null;
   click('#btnExpBoard'); await flush(250);
@@ -62,6 +69,7 @@ const nav = async p => { click($(`.nav-tab[data-page=${p}]`)); await flush(); };
     expect('gate: confirm copy itemizes the open flags', /error|warning|challenged/i.test($('#askBody').textContent));
     click('#askCancel'); await flush(250);
     expect('gate: cancel means no download', lastDownload === null);
+    click('#btnUndo'); await flush(250); click('#btnUndo'); await flush(250); // walk the stretch goal + applied targets back
     click('#btnExpBoard'); await okAsk(); await flush(400);
     expect('gate: "Export anyway" downloads the pack', !!lastDownload && /board/.test(lastDownload.name));
   }

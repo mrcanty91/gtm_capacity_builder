@@ -191,7 +191,7 @@ On the Dashboard, under the KPIs:
 
 ## 9. Notes & caveats
 
-- **Demo data**: a fresh model is the reference workbook's sample plan ($6M/$9M targets, $8M base, 26 ending heads). The dashboard banner stays until you dismiss it — do that only when the numbers are yours.
+- **Demo data**: "↺ Load demo data" loads a sample plan calibrated to a $15M-ARR Series B software company — $15M base growing to a $30M ending-ARR goal over 24 months, ~35 ending GTM heads, and every deterministic check green. The dashboard banner stays until you dismiss it — do that only when the numbers are yours.
 - **Persistence is per-browser.** Export regularly if the machine is shared. Versions live in the same browser storage.
 - **Board Review results aren't saved** across refreshes — push the challenges you care about into the ledger, which is.
 - **Desktop tool.** Month grids are unusable on phones by design honesty, not accident.
